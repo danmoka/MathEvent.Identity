@@ -1,14 +1,14 @@
 ﻿using IdentityServer4.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Newtonsoft.Json.Linq;
+using System.IO;
 using System.Security.Claims;
-using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
 
 namespace MathEvent.IdentityServer.Extensions
 {
@@ -34,8 +34,22 @@ namespace MathEvent.IdentityServer.Extensions
         /// Настройка IdentityServer4
         /// </summary>
         /// <param name="services">Зависимости</param>
-        public static void ConfigureIdentityServer(this IServiceCollection services, IConfiguration configuration)
+        public static void ConfigureIdentityServer(this IServiceCollection services, IWebHostEnvironment env, IConfiguration configuration)
         {
+            var jwtSettingsPath = Path.Combine(env.ContentRootPath, configuration["Jwt"]);
+            var jwtJsonString = File.ReadAllText(jwtSettingsPath);
+            var jwtJObject = JObject.Parse(jwtJsonString);
+            var password = jwtJObject["Jwt"]["Secret"].ToString();
+            var certificate = Path.Combine(env.ContentRootPath, "Certificates", jwtJObject["Jwt"]["Certificate"].ToString());
+
+            var cert = new X509Certificate2(
+              certificate,
+              password,
+              X509KeyStorageFlags.MachineKeySet |
+              X509KeyStorageFlags.PersistKeySet |
+              X509KeyStorageFlags.Exportable
+            );
+
             services.AddIdentityServer(options =>
             {
                 options.Events.RaiseErrorEvents = true;
@@ -48,7 +62,8 @@ namespace MathEvent.IdentityServer.Extensions
                 .AddInMemoryApiScopes(Config.ApiScopes)
                 .AddInMemoryClients(Config.Clients)
                 .AddAspNetIdentity<IdentityUser>()
-                .AddDeveloperSigningCredential(); // not recommended for production - you need to store your key material somewhere secure
+                .AddSigningCredential(cert)
+                .AddValidationKey(cert);
 
             services.AddSingleton<ICorsPolicyService>((container) =>
             {

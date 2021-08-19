@@ -11,16 +11,19 @@ namespace MathEvent.IdentityServer
     {
         public IConfiguration Configuration { get; }
 
-        public Startup(IConfiguration configuration)
+        public IWebHostEnvironment Environment { get; }
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
+            Environment = env;
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
             services.ConfigureConnection(Configuration);
             services.ConfigureIndentity();
-            services.ConfigureIdentityServer(Configuration);
+            services.ConfigureIdentityServer(Environment, Configuration);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
