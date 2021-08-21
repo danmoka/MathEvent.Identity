@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
@@ -36,11 +35,8 @@ namespace MathEvent.IdentityServer.Extensions
         /// <param name="services">Зависимости</param>
         public static void ConfigureIdentityServer(this IServiceCollection services, IWebHostEnvironment env, IConfiguration configuration)
         {
-            var jwtSettingsPath = Path.Combine(env.ContentRootPath, configuration["Jwt"]);
-            var jwtJsonString = File.ReadAllText(jwtSettingsPath);
-            var jwtJObject = JObject.Parse(jwtJsonString);
-            var password = jwtJObject["Jwt"]["Secret"].ToString();
-            var certificate = Path.Combine(env.ContentRootPath, "Certificates", jwtJObject["Jwt"]["Certificate"].ToString());
+            var password = configuration["Jwt:Secret"].ToString();
+            var certificate = Path.Combine(env.ContentRootPath, "Certificates", configuration["Jwt:Certificate"].ToString());
 
             var cert = new X509Certificate2(
               certificate,
