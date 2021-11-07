@@ -22,7 +22,7 @@ namespace MathEvent.IdentityServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.ConfigureConnection(Configuration);
-            services.ConfigureIndentity();
+            services.ConfigureIdentity();
             services.ConfigureIdentityServer(Environment, Configuration);
         }
 

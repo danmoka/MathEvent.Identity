@@ -1,11 +1,15 @@
-﻿using IdentityServer4.Services;
+﻿using IdentityServer4;
+using IdentityServer4.Models;
+using IdentityServer4.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 
@@ -35,8 +39,9 @@ namespace MathEvent.IdentityServer.Extensions
         /// <param name="services">Зависимости</param>
         public static void ConfigureIdentityServer(this IServiceCollection services, IWebHostEnvironment env, IConfiguration configuration)
         {
-            var password = configuration["Jwt:Secret"].ToString();
-            var certificate = Path.Combine(env.ContentRootPath, "Certificates", configuration["Jwt:Certificate"].ToString());
+            var jwtSettings = configuration.GetSection("Jwt");
+            var password = jwtSettings["Secret"];
+            var certificate = Path.Combine(env.ContentRootPath, jwtSettings["Folder"], jwtSettings["Certificate"]);
 
             var cert = new X509Certificate2(
               certificate,
@@ -52,11 +57,19 @@ namespace MathEvent.IdentityServer.Extensions
                 options.Events.RaiseInformationEvents = true;
                 options.Events.RaiseFailureEvents = true;
                 options.Events.RaiseSuccessEvents = true;
-                options.EmitStaticAudienceClaim = true;
+                options.IssuerUri = jwtSettings["IssuerUri"];
             })
-                .AddInMemoryIdentityResources(Config.IdentityResources)
-                .AddInMemoryApiScopes(Config.ApiScopes)
-                .AddInMemoryClients(Config.Clients)
+                .AddInMemoryIdentityResources(new List<IdentityResource>
+                {
+                    new IdentityResources.OpenId(),
+                    new IdentityResources.Profile(),
+                    new IdentityResources.Email()
+                })
+                .AddInMemoryApiScopes(new List<ApiScope>
+                {
+                    new ApiScope(configuration.GetSection("MathEventApiScope")["Main"])
+                })
+                .AddInMemoryClients(Clients(configuration))
                 .AddAspNetIdentity<IdentityUser>()
                 .AddSigningCredential(cert)
                 .AddValidationKey(cert);
@@ -76,7 +89,7 @@ namespace MathEvent.IdentityServer.Extensions
         /// Настройка пользователя
         /// </summary>
         /// <param name="services">Зависимости</param>
-        public static void ConfigureIndentity(this IServiceCollection services)
+        public static void ConfigureIdentity(this IServiceCollection services)
         {
             services.AddIdentity<IdentityUser, IdentityRole>()
                 .AddEntityFrameworkStores<RepositoryContext>()
@@ -84,8 +97,47 @@ namespace MathEvent.IdentityServer.Extensions
 
             services.Configure<IdentityOptions>(options =>
             {
-                options.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier;
+                options.ClaimsIdentity.UserIdClaimType = ClaimTypes.Email;
             });
+        }
+
+        /// <summary>
+        /// Описывает клиентов, которые могут взаимодействовать с IdentityServer4
+        /// </summary>
+        public static IEnumerable<Client> Clients(IConfiguration configuration)
+        {
+            var mathEventReactClient = configuration.GetSection("ReactClient");
+            var mathEvetnApiScope = configuration.GetSection("MathEventApiScope");
+
+            return new List<Client>
+            {
+                new Client
+                {
+                    ClientId = mathEventReactClient["ClientId"],
+                    ClientName = mathEventReactClient["ClientName"],
+                    ClientSecrets = mathEventReactClient
+                        .GetSection("ClientSecrets")
+                        .Get<string[]>()
+                        .Select(s => new Secret(s.Sha256()))
+                        .ToList(),
+                    AllowAccessTokensViaBrowser = true,
+                    AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+                    RequireClientSecret = true,
+                    AllowOfflineAccess = true,
+                    RefreshTokenExpiration = TokenExpiration.Sliding,
+                    RefreshTokenUsage = TokenUsage.ReUse,
+                    AbsoluteRefreshTokenLifetime = 1296000,
+                    AccessTokenLifetime = 3600,
+                    AllowedScopes = new List<string>
+                    {
+                        mathEvetnApiScope["Main"],
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile,
+                        IdentityServerConstants.StandardScopes.Email,
+                        IdentityServerConstants.StandardScopes.OfflineAccess
+                    }
+                }
+            };
         }
     }
 }
