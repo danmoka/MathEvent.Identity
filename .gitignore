@@ -5,6 +5,7 @@
 
 *jwk
 appsettings.json
+**/Migrations/
 
 # User-specific files
 *.rsuser

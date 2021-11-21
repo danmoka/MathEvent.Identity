@@ -1,16 +1,18 @@
 ﻿using IdentityServer4;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
+using MathEvent.IdentityServer.Entities;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 
 namespace MathEvent.IdentityServer.Extensions
@@ -20,19 +22,6 @@ namespace MathEvent.IdentityServer.Extensions
     /// </summary>
     public static class ServiceExtension
     {
-        /// <summary>
-        /// Настройка подключения к базе данных
-        /// </summary>
-        /// <param name="services">Зависимости</param>
-        /// <param name="configuration">Поставщик конфигурации</param>
-        public static void ConfigureConnection(this IServiceCollection services, IConfiguration configuration)
-        {
-            services.AddDbContext<RepositoryContext>(options =>
-            {
-                options.UseSqlServer(configuration.GetConnectionString("DBConnection"));
-            });
-        }
-
         /// <summary>
         /// Настройка IdentityServer4
         /// </summary>
@@ -63,14 +52,15 @@ namespace MathEvent.IdentityServer.Extensions
                 {
                     new IdentityResources.OpenId(),
                     new IdentityResources.Profile(),
-                    new IdentityResources.Email()
+                    new IdentityResources.Email(),
                 })
                 .AddInMemoryApiScopes(new List<ApiScope>
                 {
                     new ApiScope(configuration.GetSection("MathEventApiScope")["Main"])
                 })
                 .AddInMemoryClients(Clients(configuration))
-                .AddAspNetIdentity<IdentityUser>()
+                .AddAspNetIdentity<MathEventIdentityUser>()
+                .AddProfileService<ProfileService>()
                 .AddSigningCredential(cert)
                 .AddValidationKey(cert);
 
@@ -82,22 +72,6 @@ namespace MathEvent.IdentityServer.Extensions
                 {
                     AllowedOrigins = configuration.GetSection("Origins").Get<string[]>()
                 };
-            });
-        }
-
-        /// <summary>
-        /// Настройка пользователя
-        /// </summary>
-        /// <param name="services">Зависимости</param>
-        public static void ConfigureIdentity(this IServiceCollection services)
-        {
-            services.AddIdentity<IdentityUser, IdentityRole>()
-                .AddEntityFrameworkStores<RepositoryContext>()
-                .AddDefaultTokenProviders();
-
-            services.Configure<IdentityOptions>(options =>
-            {
-                options.ClaimsIdentity.UserIdClaimType = ClaimTypes.Email;
             });
         }
 
@@ -138,6 +112,72 @@ namespace MathEvent.IdentityServer.Extensions
                     }
                 }
             };
+        }
+
+        /// <summary>
+        /// Настройка контроллеров и json
+        /// </summary>
+        /// <param name="services">Зависимости</param>
+        public static void ConfigureControllers(this IServiceCollection services)
+        {
+            services.AddControllers().AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            });
+        }
+
+        /// <summary>
+        /// Настройка OpenApi
+        /// </summary>
+        /// <param name="services">Зависимости</param>
+        public static void ConfigureOpenApi(this IServiceCollection services)
+        {
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "MathEvent.IdentityServer.Api", Version = "v1" });
+            });
+        }
+
+        /// <summary>
+        /// Настройка аутентификации
+        /// </summary>
+        /// <param name="services">Зависимости</param>
+        /// <param name="configuration">Поставщик конфигурации</param>
+        public static void ConfigureAuthentication(this IServiceCollection services, IConfiguration configuration)
+        {
+            var authenticationSettings = configuration.GetSection("Authentication");
+            services.AddAuthentication().AddJwtBearer(options =>
+            {
+                options.Authority = authenticationSettings["Authority"];
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateAudience = false,
+                    ValidateIssuer = true,
+                    ValidIssuer = authenticationSettings["IssuerUri"],
+                };
+            });
+        }
+
+        /// <summary>
+        /// Настройка авторизации
+        /// </summary>
+        /// <param name="services">Зависимости</param>
+        /// <param name="configuration">Поставщик конфигурации</param>
+        public static void ConfigureAuthorization(this IServiceCollection services, IConfiguration configuration)
+        {
+            var authenticationSettings = configuration.GetSection("Authentication");
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("MathEventIdentityServer.Api", policy =>
+                {
+                    policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireClaim("scope", authenticationSettings
+                        .GetSection("Scopes")
+                        .Get<string[]>());
+                });
+            });
         }
     }
 }
