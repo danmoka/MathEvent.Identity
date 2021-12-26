@@ -24,7 +24,6 @@ namespace MathEvent.IdentityServer.Validation.User
 
             validationErrors.AddRange(_userValidationUtils.ValidateName(model.Name));
             validationErrors.AddRange(_userValidationUtils.ValidateSurname(model.Surname));
-            validationErrors.AddRange(_userValidationUtils.ValidateUsername(model.UserName));
 
             return new ValidationResult
             {

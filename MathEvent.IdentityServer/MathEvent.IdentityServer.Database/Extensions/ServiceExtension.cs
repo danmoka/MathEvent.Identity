@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace MathEvent.IdentityServer.Database.Extensions
 {
@@ -17,12 +18,14 @@ namespace MathEvent.IdentityServer.Database.Extensions
         /// </summary>
         /// <param name="services">Зависимости</param>
         /// <param name="configuration">Поставщик конфигурации</param>
-        public static void ConfigureConnection(this IServiceCollection services, IConfiguration configuration)
+        public static void ConfigureDbConnection(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<RepositoryContext>(options =>
             {
                 options.UseSqlServer(configuration.GetConnectionString("DBConnection"));
             });
+
+            InitializeData(services, configuration).Wait();
         }
 
         /// <summary>
@@ -31,7 +34,14 @@ namespace MathEvent.IdentityServer.Database.Extensions
         /// <param name="services">Зависимости</param>
         public static void ConfigureIndentity(this IServiceCollection services)
         {
-            services.AddIdentity<MathEventIdentityUser, MathEventIdentityRole>()
+            services.AddIdentity<MathEventIdentityUser, MathEventIdentityRole>(opt =>
+            {
+                opt.User.RequireUniqueEmail = true;
+                opt.Password.RequiredLength = 6;
+                opt.Password.RequireNonAlphanumeric = false;
+                opt.Password.RequireLowercase = false;
+                opt.Password.RequireUppercase = false;
+            })
                 .AddEntityFrameworkStores<RepositoryContext>()
                 .AddDefaultTokenProviders();
 
@@ -39,6 +49,15 @@ namespace MathEvent.IdentityServer.Database.Extensions
             {
                 options.ClaimsIdentity.UserIdClaimType = ClaimTypes.Email;
             });
+        }
+
+        private static async Task InitializeData(IServiceCollection services, IConfiguration configuration)
+        {
+            var serviceProvider = services.BuildServiceProvider();
+            var roleManager = serviceProvider.GetRequiredService<RoleManager<MathEventIdentityRole>>();
+            var userManager = serviceProvider.GetRequiredService<UserManager<MathEventIdentityUser>>();
+
+            await DataInitializer.Initialize(roleManager, userManager, configuration);
         }
     }
 }

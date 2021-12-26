@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using MathEvent.IdentityServer.Constants;
 using MathEvent.IdentityServer.Contracts.Repositories;
 using MathEvent.IdentityServer.Contracts.Services;
 using MathEvent.IdentityServer.Entities;
@@ -53,6 +54,7 @@ namespace MathEvent.IdentityServer.Services
                 throw new InvalidOperationException(createResult.Errors.ToString());
             }
 
+            await _userManager.AddToRoleAsync(user, MathEventIdentityServerRoles.User);
             await _repositoryWrapper.Save();
 
             var userReadModel = _mapper.Map<MathEventIdentityUserReadModel>(user);
@@ -110,6 +112,11 @@ namespace MathEvent.IdentityServer.Services
             return userReadModel;
         }
 
+        /// <summary>
+        /// Удаляет пользователя с указанным id
+        /// </summary>
+        /// <param name="id">id пользователя</param>
+        /// <returns></returns>
         public async Task Delete(Guid id)
         {
             var user = await GetMathEventIdentityUser(id);
@@ -151,6 +158,17 @@ namespace MathEvent.IdentityServer.Services
             return _userManager.FindByEmailAsync(email);
         }
 
+
+        /// <summary>
+        /// Возвращает пользователя по логину
+        /// </summary>
+        /// <param name="userName">Логин</param>
+        /// <returns>Пользователь</returns>
+        public Task<MathEventIdentityUser> GetIdentityUserByUserName(string userName)
+        {
+            return _userManager.FindByNameAsync(userName);
+        }
+
         /// <summary>
         /// Возвращает список ролей пользователя
         /// </summary>
@@ -159,6 +177,17 @@ namespace MathEvent.IdentityServer.Services
         public Task<IList<string>> GetIdentityUserRoles(MathEventIdentityUser user)
         {
             return _userManager.GetRolesAsync(user);
+        }
+
+        /// <summary>
+        /// Проверяет, является ли пользователь в роли
+        /// </summary>
+        /// <param name="user">Пользователь</param>
+        /// <param name="role">Роль</param>
+        /// <returns>Результат проверки</returns>
+        public Task<bool> IsInRole(MathEventIdentityUser user, string role)
+        {
+            return _userManager.IsInRoleAsync(user, role);
         }
 
         public async Task ForgotPassword(string email)

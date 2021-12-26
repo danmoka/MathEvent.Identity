@@ -23,7 +23,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MathEvent.IdentityServer.Em
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MathEvent.IdentityServer.Validation", "MathEvent.IdentityServer.Validation\MathEvent.IdentityServer.Validation.csproj", "{D08A3A75-A3D0-4306-A4B2-AF6A515E61DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathEvent.IdentityServer.Authorization", "MathEvent.IdentityServer.Authorization\MathEvent.IdentityServer.Authorization.csproj", "{A3A7435E-35AD-47D5-9080-88BB5FDEF60C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MathEvent.IdentityServer.Authorization", "MathEvent.IdentityServer.Authorization\MathEvent.IdentityServer.Authorization.csproj", "{A3A7435E-35AD-47D5-9080-88BB5FDEF60C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathEvent.IdentityServer.Constants", "MathEvent.IdentityServer.Constants\MathEvent.IdentityServer.Constants.csproj", "{68F8D049-20FF-4A5F-8FAF-25B64E836E75}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +77,10 @@ Global
 		{A3A7435E-35AD-47D5-9080-88BB5FDEF60C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3A7435E-35AD-47D5-9080-88BB5FDEF60C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3A7435E-35AD-47D5-9080-88BB5FDEF60C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68F8D049-20FF-4A5F-8FAF-25B64E836E75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68F8D049-20FF-4A5F-8FAF-25B64E836E75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68F8D049-20FF-4A5F-8FAF-25B64E836E75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68F8D049-20FF-4A5F-8FAF-25B64E836E75}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

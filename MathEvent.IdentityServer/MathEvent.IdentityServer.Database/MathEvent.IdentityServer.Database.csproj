@@ -10,9 +10,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MathEvent.IdentityServer.Constants\MathEvent.IdentityServer.Constants.csproj" />
     <ProjectReference Include="..\MathEvent.IdentityServer.Entities\MathEvent.IdentityServer.Entities.csproj" />
   </ItemGroup>
 

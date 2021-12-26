@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace MathEvent.IdentityServer.Contracts.Services
 {
+    /// <summary>
+    /// Декларирует функциональность сервиса пользователей
+    /// </summary>
     public interface IMathEventIdentityUserService
     {
         Task<MathEventIdentityUserReadModel> Retrieve(Guid id);
@@ -21,7 +24,11 @@ namespace MathEvent.IdentityServer.Contracts.Services
 
         Task<MathEventIdentityUser> GetIdentityUserByEmail(string email);
 
+        Task<MathEventIdentityUser> GetIdentityUserByUserName(string userName);
+
         Task<IList<string>> GetIdentityUserRoles(MathEventIdentityUser user);
+
+        Task<bool> IsInRole(MathEventIdentityUser user, string role);
 
         Task ForgotPassword(string email);
 

@@ -8,5 +8,12 @@ namespace MathEvent.IdentityServer.Entities
     /// </summary>
     public class MathEventIdentityRole : IdentityRole<Guid>
     {
+        public MathEventIdentityRole(string role) : base(role)
+        {
+        }
+
+        public MathEventIdentityRole() : base()
+        {
+        }
     }
 }

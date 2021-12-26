@@ -1,4 +1,5 @@
-﻿using MathEvent.IdentityServer.Contracts.Services;
+﻿using MathEvent.IdentityServer.Constants;
+using MathEvent.IdentityServer.Contracts.Services;
 using MathEvent.IdentityServer.Models.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
@@ -26,37 +27,33 @@ namespace MathEvent.IdentityServer.Authorization.User
             OperationAuthorizationRequirement requirement,
             MathEventIdentityUserReadModel resource)
         {
-            var email = context.User.Claims
-                .Where(c => c.Type == ClaimTypes.Email)
-                .SingleOrDefault();
-
-            if (email is null)
-            {
-                context.Fail();
-            }
-
-            var user = await _mathEventIdentityUserService.GetIdentityUserByEmail(email.Value);
-
-            if (user is null)
-            {
-                context.Fail();
-            }
-
             if (requirement.Name == Operations.Read.Name
                 || requirement.Name == Operations.Update.Name
                 || requirement.Name == Operations.Delete.Name)
             {
-                if (resource.Id == user.Id)
+                var email = context.User.Claims
+                    .Where(c => c.Type == ClaimTypes.Email)
+                    .SingleOrDefault();
+
+                if (email is not null)
                 {
-                    context.Succeed(requirement);
-                }
-                else
-                {
-                    context.Fail();
+                    var user = await _mathEventIdentityUserService.GetIdentityUserByEmail(email.Value);
+
+                    if (user is not null && resource.Id == user.Id)
+                    {
+                        context.Succeed(requirement);
+                        return;
+                    }
+
+                    if (user is not null && await _mathEventIdentityUserService.IsInRole(user, MathEventIdentityServerRoles.Administrator))
+                    {
+                        context.Succeed(requirement);
+                        return;
+                    }
                 }
             }
 
-            context.Succeed(requirement);
+            context.Fail();
         }
     }
 }

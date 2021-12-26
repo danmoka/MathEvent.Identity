@@ -24,9 +24,7 @@ namespace MathEvent.IdentityServer.Validation.User
 
         private const int _surnameMaxLength = 50;
 
-        private const int _usernameMaxLength = 62;
-
-        private const int _patronymicMaxLength = 50;
+        private const int _usernameMaxLength = 256;
 
         public UserValidationUtils(IMathEventIdentityUserService identityUserService)
         {
@@ -247,13 +245,13 @@ namespace MathEvent.IdentityServer.Validation.User
         /// </summary>
         /// <param name="username">Логин</param>
         /// <returns>Ошибки валидации</returns>
-        public IEnumerable<ValidationError> ValidateUsername(string username)
+        public async Task<IEnumerable<ValidationError>> ValidateUsername(string username, bool checkUserExistence = true)
         {
             var validationErrors = new List<ValidationError>();
 
             if (string.IsNullOrEmpty(username))
             {
-                validationErrors.Add(new ValidationError { Field = nameof(username), Message = "Введите логин" });
+                validationErrors.Add(new ValidationError { Field = nameof(username), Message = "Логин должен быть задан" });
             }
             else
             {
@@ -263,6 +261,15 @@ namespace MathEvent.IdentityServer.Validation.User
                     {
                         Field = nameof(username),
                         Message = $"Длина логина не должна превышать {_usernameMaxLength} символов"
+                    });
+                }
+
+                if (checkUserExistence && await _identityUserService.GetIdentityUserByUserName(username) != null)
+                {
+                    validationErrors.Add(new ValidationError
+                    {
+                        Field = nameof(username),
+                        Message = "Пользователь с данным логином уже существует"
                     });
                 }
             }

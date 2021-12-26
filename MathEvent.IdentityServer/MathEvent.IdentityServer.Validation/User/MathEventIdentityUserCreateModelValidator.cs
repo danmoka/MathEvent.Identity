@@ -25,7 +25,7 @@ namespace MathEvent.IdentityServer.Validation.User
             validationErrors.AddRange(_userValidationUtils.ValidateName(model.Name));
             validationErrors.AddRange(_userValidationUtils.ValidateSurname(model.Surname));
             validationErrors.AddRange(await _userValidationUtils.ValidateEmail(model.Email));
-            validationErrors.AddRange(_userValidationUtils.ValidateUsername(model.UserName));
+            validationErrors.AddRange(await _userValidationUtils.ValidateUsername(model.UserName));
             validationErrors.AddRange(_userValidationUtils.ValidatePassword(model.Password));
 
             if (model.Password != model.PasswordConfirm)

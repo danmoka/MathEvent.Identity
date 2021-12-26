@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MathEvent.IdentityServer.Constants\MathEvent.IdentityServer.Constants.csproj" />
     <ProjectReference Include="..\MathEvent.IdentityServer.Contracts\MathEvent.IdentityServer.Contracts.csproj" />
   </ItemGroup>
 

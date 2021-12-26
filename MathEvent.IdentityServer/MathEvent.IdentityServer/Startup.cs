@@ -28,8 +28,8 @@ namespace MathEvent.IdentityServer
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.ConfigureConnection(Configuration);
             services.ConfigureIndentity();
+            services.ConfigureDbConnection(Configuration);
             services.ConfigureAuthentication(Configuration);
             services.ConfigureAuthorization(Configuration);
             services.ConfigureRepositoryWrapper();
@@ -48,17 +48,16 @@ namespace MathEvent.IdentityServer
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseCors(builder =>
+                {
+                    builder.WithOrigins(Configuration.GetSection("Origins").Get<string[]>());
+                    builder.AllowCredentials();
+                    builder.AllowAnyHeader();
+                    builder.AllowAnyMethod();
+                });
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MathEvent.IdentityServer.Api v1"));
             }
-
-            app.UseCors(builder =>
-            {
-                builder.WithOrigins(Configuration.GetSection("Origins").Get<string[]>());
-                builder.AllowCredentials();
-                builder.AllowAnyHeader();
-                builder.AllowAnyMethod();
-            });
 
             app.UseHttpsRedirection();
 
