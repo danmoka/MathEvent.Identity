@@ -1,4 +1,11 @@
+using MathEvent.IdentityServer.Authorization.Extensions;
+using MathEvent.IdentityServer.Database.Extensions;
+using MathEvent.IdentityServer.Email.Extensions;
 using MathEvent.IdentityServer.Extensions;
+using MathEvent.IdentityServer.Mappers.Extensions;
+using MathEvent.IdentityServer.Repositories.Extensions;
+using MathEvent.IdentityServer.Services.Extensions;
+using MathEvent.IdentityServer.Validation.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -21,9 +28,19 @@ namespace MathEvent.IdentityServer
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.ConfigureConnection(Configuration);
-            services.ConfigureIdentity();
+            services.ConfigureIndentity();
+            services.ConfigureDbConnection(Configuration);
+            services.ConfigureAuthentication(Configuration);
+            services.ConfigureAuthorization(Configuration);
+            services.ConfigureRepositoryWrapper();
+            services.ConfigureEntityServices();
+            services.ConfigureAuthorizationHandlers();
+            services.ConfigureEmail();
+            services.ConfigureMapper();
+            services.ConfigureValidation();
+            services.ConfigureControllers();
             services.ConfigureIdentityServer(Environment, Configuration);
+            services.ConfigureOpenApi();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -31,19 +48,31 @@ namespace MathEvent.IdentityServer
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseCors(builder =>
+                {
+                    builder.WithOrigins(Configuration.GetSection("Origins").Get<string[]>());
+                    builder.AllowCredentials();
+                    builder.AllowAnyHeader();
+                    builder.AllowAnyMethod();
+                });
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MathEvent.IdentityServer.Api v1"));
             }
 
-            app.UseCors(builder =>
-            {
-                builder.WithOrigins(Configuration.GetSection("Origins").Get<string[]>());
-                builder.AllowCredentials();
-                builder.AllowAnyHeader();
-                builder.AllowAnyMethod();
-            });
+            app.UseHttpsRedirection();
 
             app.UseRouting();
 
+            app.UseAuthentication();
+
+            app.UseAuthorization();
+
             app.UseIdentityServer();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers().RequireAuthorization("MathEventIdentityServer.Api");
+            });
         }
     }
 }

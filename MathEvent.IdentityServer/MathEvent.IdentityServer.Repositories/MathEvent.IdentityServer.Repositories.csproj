@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MathEvent.IdentityServer.Contracts\MathEvent.IdentityServer.Contracts.csproj" />
+    <ProjectReference Include="..\MathEvent.IdentityServer.Database\MathEvent.IdentityServer.Database.csproj" />
+  </ItemGroup>
+
+</Project>
