@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -22,7 +23,9 @@ namespace MathEvent.IdentityServer.Database.Extensions
         {
             services.AddDbContext<RepositoryContext>(options =>
             {
-                options.UseSqlServer(configuration.GetConnectionString("DBConnection"));
+                options.UseMySql(
+                    configuration.GetConnectionString("DBConnection"),
+                    new MySqlServerVersion(new Version(configuration["MySql:Version"])));
             });
 
             InitializeData(services, configuration).Wait();

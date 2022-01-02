@@ -9,7 +9,7 @@ namespace MathEvent.IdentityServer.Database
     {
         public RepositoryContext(DbContextOptions<RepositoryContext> options) : base(options)
         {
-
+            Database.EnsureCreated();
         }
 
         public DbSet<MathEventIdentityUser> MathEventIdentityUsers { get; set; }
