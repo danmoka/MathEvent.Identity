@@ -5,6 +5,7 @@
 
 *jwk
 appsettings.json
+appsettings.Development.json
 **/Migrations/
 
 # User-specific files
