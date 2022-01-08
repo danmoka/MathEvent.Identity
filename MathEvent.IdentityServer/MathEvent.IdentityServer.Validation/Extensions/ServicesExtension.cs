@@ -19,6 +19,7 @@ namespace MathEvent.IdentityServer.Validation.Extensions
             services.AddTransient<IMathEventIdentityUserUpdateModelValidator, MathEventIdentityUserUpdateModelValidator>();
             services.AddTransient<IForgotPasswordModelValidator, ForgotPasswordModelValidator>();
             services.AddTransient<IForgotPasswordResetModelValidator, ForgotPasswordResetModelValidator>();
+            services.AddTransient<IMathEventIdentityUserRoleModelValidator, MathEventIdentityUserRoleModelValidator>();
             services.AddTransient<UserValidationUtils>();
         }
     }

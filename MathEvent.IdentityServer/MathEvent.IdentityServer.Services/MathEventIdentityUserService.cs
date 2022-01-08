@@ -182,12 +182,80 @@ namespace MathEvent.IdentityServer.Services
         /// <summary>
         /// Проверяет, является ли пользователь в роли
         /// </summary>
-        /// <param name="user">Пользователь</param>
+        /// <param name="id">Идентификатор пользователя</param>
         /// <param name="role">Роль</param>
         /// <returns>Результат проверки</returns>
-        public Task<bool> IsInRole(MathEventIdentityUser user, string role)
+        public async Task<bool> IsInRole(Guid id, string role)
         {
-            return _userManager.IsInRoleAsync(user, role);
+            var user = await GetMathEventIdentityUser(id);
+
+            if (user is null)
+            {
+                throw new InvalidOperationException($"IdentityUser with id={id} is not found");
+            }
+
+            return await _userManager.IsInRoleAsync(user, role);
+        }
+
+        /// <summary>
+        /// Добавляет пользователя в роль
+        /// </summary>
+        /// <param name="id">Идентификатор пользователя</param>
+        /// <param name="role">Роль</param>
+        /// <returns>Пользователь</returns>
+        public async Task<MathEventIdentityUserReadModel> AddToRole(Guid id, string role)
+        {
+            // TODO: валидация, что пользователь не в роли
+            var user = await GetMathEventIdentityUser(id);
+
+            if (user is null)
+            {
+                throw new InvalidOperationException($"IdentityUser with id={id} is not found");
+            }
+
+            var addToRoleResult = await _userManager.AddToRoleAsync(user, role);
+
+            if (addToRoleResult.Succeeded)
+            {
+                var userReadModel = _mapper.Map<MathEventIdentityUserReadModel>(user);
+
+                return userReadModel;
+            }
+            else
+            {
+                // TODO: ошибки на клинте выглядят как System.List ...
+                throw new InvalidOperationException(addToRoleResult.Errors.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Удаляет пользователя из роли
+        /// </summary>
+        /// <param name="id">Идентификатор пользователя</param>
+        /// <param name="role">Роль пользователя</param>
+        /// <returns>Пользователь</returns>
+        public async Task<MathEventIdentityUserReadModel> RemoveFromRole(Guid id, string role)
+        {
+            // TODO: валидация, что пользователь в роли
+            var user = await GetMathEventIdentityUser(id);
+
+            if (user is null)
+            {
+                throw new InvalidOperationException($"IdentityUser with id={id} is not found");
+            }
+
+            var removeFromRoleResult = await _userManager.RemoveFromRoleAsync(user, role);
+
+            if (removeFromRoleResult.Succeeded)
+            {
+                var userReadModel = _mapper.Map<MathEventIdentityUserReadModel>(user);
+
+                return userReadModel;
+            }
+            else
+            {
+                throw new InvalidOperationException(removeFromRoleResult.Errors.ToString());
+            }
         }
 
         public async Task ForgotPassword(string email)

@@ -28,7 +28,11 @@ namespace MathEvent.IdentityServer.Contracts.Services
 
         Task<IList<string>> GetIdentityUserRoles(MathEventIdentityUser user);
 
-        Task<bool> IsInRole(MathEventIdentityUser user, string role);
+        Task<bool> IsInRole(Guid id, string role);
+
+        Task<MathEventIdentityUserReadModel> AddToRole(Guid id, string role);
+
+        Task<MathEventIdentityUserReadModel> RemoveFromRole(Guid id, string role);
 
         Task ForgotPassword(string email);
 

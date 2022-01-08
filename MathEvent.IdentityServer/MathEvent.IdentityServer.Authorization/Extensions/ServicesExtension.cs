@@ -13,6 +13,7 @@ namespace MathEvent.IdentityServer.Authorization.Extensions
         public static void ConfigureAuthorizationHandlers(this IServiceCollection services)
         {
             services.AddScoped<IAuthorizationHandler, MathEventIdentityUsersAuthorizationCrudHandler>();
+            services.AddScoped<IAuthorizationHandler, MathEventIdentityUsersRoleAuthorizationHandler>();
         }
     }
 }

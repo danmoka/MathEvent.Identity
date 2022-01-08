@@ -31,7 +31,6 @@ namespace MathEvent.IdentityServer.Database
                 MathEventIdentityServerRoles.Administrator,
                 MathEventIdentityServerRoles.User,
                 MathEventRoles.Administrator,
-                MathEventRoles.Moderator,
             };
 
             foreach (var role in applicationRoles)

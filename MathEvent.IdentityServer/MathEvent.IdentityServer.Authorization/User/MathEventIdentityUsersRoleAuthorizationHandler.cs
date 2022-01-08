@@ -9,15 +9,12 @@ using System.Threading.Tasks;
 
 namespace MathEvent.IdentityServer.Authorization.User
 {
-    /// <summary>
-    /// Обработчик запроса на авторизацию для CRUD операций пользователей
-    /// </summary>
-    public class MathEventIdentityUsersAuthorizationCrudHandler :
-        AuthorizationHandler<OperationAuthorizationRequirement, MathEventIdentityUserReadModel>
+    public class MathEventIdentityUsersRoleAuthorizationHandler :
+        AuthorizationHandler<OperationAuthorizationRequirement, MathEventIdentityUserRoleModel>
     {
         private readonly IMathEventIdentityUserService _mathEventIdentityUserService;
 
-        public MathEventIdentityUsersAuthorizationCrudHandler(IMathEventIdentityUserService userService)
+        public MathEventIdentityUsersRoleAuthorizationHandler(IMathEventIdentityUserService userService)
         {
             _mathEventIdentityUserService = userService;
         }
@@ -25,10 +22,9 @@ namespace MathEvent.IdentityServer.Authorization.User
         protected override async Task HandleRequirementAsync(
             AuthorizationHandlerContext context,
             OperationAuthorizationRequirement requirement,
-            MathEventIdentityUserReadModel resource)
+            MathEventIdentityUserRoleModel resource)
         {
-            if (requirement.Name == Operations.Read.Name
-                || requirement.Name == Operations.Update.Name
+            if (requirement.Name == Operations.Create.Name
                 || requirement.Name == Operations.Delete.Name)
             {
                 var email = context.User.Claims
@@ -38,12 +34,6 @@ namespace MathEvent.IdentityServer.Authorization.User
                 if (email is not null)
                 {
                     var user = await _mathEventIdentityUserService.GetIdentityUserByEmail(email.Value);
-
-                    if (user is not null && resource.Id == user.Id)
-                    {
-                        context.Succeed(requirement);
-                        return;
-                    }
 
                     if (user is not null && await _mathEventIdentityUserService.IsInRole(user.Id, MathEventIdentityServerRoles.Administrator))
                     {

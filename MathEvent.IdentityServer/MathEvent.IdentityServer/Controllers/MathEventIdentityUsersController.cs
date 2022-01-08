@@ -30,6 +30,8 @@ namespace MathEvent.IdentityServer.Controllers
 
         private readonly IForgotPasswordResetModelValidator _forgotPasswordResetModelValidator;
 
+        private readonly IMathEventIdentityUserRoleModelValidator _mathEventIdentityUserRoleModelValidator;
+
         public MathEventIdentityUsersController(
             IMapper mapper,
             IMathEventIdentityUserService userService,
@@ -37,7 +39,8 @@ namespace MathEvent.IdentityServer.Controllers
             IMathEventIdentityUserCreateModelValidator userCreateModelValidator,
             IMathEventIdentityUserUpdateModelValidator userUpdateModelValidator,
             IForgotPasswordModelValidator forgotPasswordModelValidator,
-            IForgotPasswordResetModelValidator forgotPasswordResetModelValidator)
+            IForgotPasswordResetModelValidator forgotPasswordResetModelValidator,
+            IMathEventIdentityUserRoleModelValidator mathEventIdentityUserRoleModelValidator)
         {
             _mapper = mapper;
             _mathEventIdentityUserService = userService;
@@ -46,6 +49,7 @@ namespace MathEvent.IdentityServer.Controllers
             _mathEventIdentityUserUpdateModelValidator = userUpdateModelValidator;
             _forgotPasswordModelValidator = forgotPasswordModelValidator;
             _forgotPasswordResetModelValidator = forgotPasswordResetModelValidator;
+            _mathEventIdentityUserRoleModelValidator = mathEventIdentityUserRoleModelValidator;
         }
 
         [HttpPost]
@@ -241,6 +245,66 @@ namespace MathEvent.IdentityServer.Controllers
             await _mathEventIdentityUserService.ResetPassword(resetModel);
 
             return Ok();
+        }
+
+        [HttpPost("AddToRole/")]
+        public async Task<IActionResult> AddToRole([FromBody] MathEventIdentityUserRoleModel userRoleModel)
+        {
+            var validationResult = await _mathEventIdentityUserRoleModelValidator.Validate(userRoleModel);
+
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors);
+            }
+
+            var authorizationResult = await _authorizationService
+                .AuthorizeAsync(User, userRoleModel, Operations.Create);
+
+            if (!authorizationResult.Succeeded)
+            {
+                return StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    $"Вам нельзя добавлять пользователя с id={userRoleModel.Id} в роль={userRoleModel.Role}");
+            }
+
+            var user = await _mathEventIdentityUserService.AddToRole(userRoleModel.Id, userRoleModel.Role);
+
+            if (user is null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ошибка во время добавления в роль");
+            }
+
+            return Ok(user);
+        }
+
+        [HttpPost("RemoveFromRole/")]
+        public async Task<IActionResult> RemoveFromRole([FromBody] MathEventIdentityUserRoleModel userRoleModel)
+        {
+            var validationResult = await _mathEventIdentityUserRoleModelValidator.Validate(userRoleModel);
+
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors);
+            }
+
+            var authorizationResult = await _authorizationService
+                .AuthorizeAsync(User, userRoleModel, Operations.Delete);
+
+            if (!authorizationResult.Succeeded)
+            {
+                return StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    $"Вам нельзя удалять пользователя с id={userRoleModel.Id} из роли={userRoleModel.Role}");
+            }
+
+            var user = await _mathEventIdentityUserService.RemoveFromRole(userRoleModel.Id, userRoleModel.Role);
+
+            if (user is null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ошибка во время удаления из роли");
+            }
+
+            return Ok(user);
         }
     }
 }
