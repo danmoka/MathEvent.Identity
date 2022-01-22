@@ -1,0 +1,20 @@
+version: "${DOCKER_COMPOSE_VERSION}"
+
+services:
+  identity:
+    build: 
+      context: ./
+      dockerfile: MathEvent.IdentityServer/Dockerfile
+    image: matheventidentity
+    container_name: matheventidentity
+    platform: "${DOCKER_COMPOSE_IMAGE_PLATFORM}"
+    networks:
+      - mathevent
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5001;
+    volumes:
+      - ./MathEvent.IdentityServer/Certificates/cert.pfx:/app/Certificates/cert.pfx
+networks:
+  mathevent:
+    external: true

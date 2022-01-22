@@ -30,7 +30,7 @@ namespace MathEvent.IdentityServer
         {
             services.ConfigureIndentity();
             services.ConfigureDbConnection(Configuration);
-            services.ConfigureAuthentication(Configuration);
+            services.ConfigureAuthentication(Configuration, Environment);
             services.ConfigureAuthorization(Configuration);
             services.ConfigureRepositoryWrapper();
             services.ConfigureEntityServices();
@@ -47,7 +47,6 @@ namespace MathEvent.IdentityServer
         {
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
                 app.UseCors(builder =>
                 {
                     builder.WithOrigins(Configuration.GetSection("Origins").Get<string[]>());
@@ -55,11 +54,19 @@ namespace MathEvent.IdentityServer
                     builder.AllowAnyHeader();
                     builder.AllowAnyMethod();
                 });
+                app.UseHttpsRedirection();
+                app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MathEvent.IdentityServer.Api v1"));
             }
-
-            app.UseHttpsRedirection();
+            else if (env.IsProduction())
+            {
+                app.UseCors(x => x
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .SetIsOriginAllowed(origin => true) // allow any origin
+                .AllowCredentials());
+            }
 
             app.UseRouting();
 

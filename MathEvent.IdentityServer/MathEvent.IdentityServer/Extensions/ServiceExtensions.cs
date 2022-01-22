@@ -6,14 +6,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 
 namespace MathEvent.IdentityServer.Extensions
 {
@@ -29,16 +28,16 @@ namespace MathEvent.IdentityServer.Extensions
         public static void ConfigureIdentityServer(this IServiceCollection services, IWebHostEnvironment env, IConfiguration configuration)
         {
             var jwtSettings = configuration.GetSection("Jwt");
-            var password = jwtSettings["Secret"];
-            var certificate = Path.Combine(env.ContentRootPath, jwtSettings["Folder"], jwtSettings["Certificate"]);
+            //var password = jwtSettings["Secret"];
+            //var certificate = Path.Combine(env.ContentRootPath, jwtSettings["Folder"], jwtSettings["Certificate"]);
 
-            var cert = new X509Certificate2(
-              certificate,
-              password,
-              X509KeyStorageFlags.MachineKeySet |
-              X509KeyStorageFlags.PersistKeySet |
-              X509KeyStorageFlags.Exportable
-            );
+            //var cert = new X509Certificate2(
+            //  certificate,
+            //  password,
+            //  X509KeyStorageFlags.MachineKeySet |
+            //  X509KeyStorageFlags.PersistKeySet |
+            //  X509KeyStorageFlags.Exportable
+            //);
 
             services.AddIdentityServer(options =>
             {
@@ -61,8 +60,9 @@ namespace MathEvent.IdentityServer.Extensions
                 .AddInMemoryClients(Clients(configuration))
                 .AddAspNetIdentity<MathEventIdentityUser>()
                 .AddProfileService<ProfileService>()
-                .AddSigningCredential(cert)
-                .AddValidationKey(cert);
+                .AddDeveloperSigningCredential();
+            //.AddSigningCredential(cert)
+            //.AddValidationKey(cert);
 
             services.AddSingleton<ICorsPolicyService>((container) =>
             {
@@ -143,11 +143,20 @@ namespace MathEvent.IdentityServer.Extensions
         /// </summary>
         /// <param name="services">Зависимости</param>
         /// <param name="configuration">Поставщик конфигурации</param>
-        public static void ConfigureAuthentication(this IServiceCollection services, IConfiguration configuration)
+        public static void ConfigureAuthentication(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment env)
         {
             var authenticationSettings = configuration.GetSection("Authentication");
             services.AddAuthentication().AddJwtBearer(options =>
             {
+                if (env.IsProduction())
+                {
+                    options.RequireHttpsMetadata = false;
+                }
+                else if (env.IsDevelopment())
+                {
+                    options.RequireHttpsMetadata = true;
+                }
+
                 options.Authority = authenticationSettings["Authority"];
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
