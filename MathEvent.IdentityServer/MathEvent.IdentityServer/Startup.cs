@@ -30,7 +30,7 @@ namespace MathEvent.IdentityServer
         {
             services.ConfigureIndentity();
             services.ConfigureDbConnection(Configuration);
-            services.ConfigureAuthentication(Configuration, Environment);
+            services.ConfigureAuthentication(Configuration);
             services.ConfigureAuthorization(Configuration);
             services.ConfigureRepositoryWrapper();
             services.ConfigureEntityServices();

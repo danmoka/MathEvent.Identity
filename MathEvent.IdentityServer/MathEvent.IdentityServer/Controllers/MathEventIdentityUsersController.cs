@@ -3,11 +3,13 @@ using MathEvent.IdentityServer.Authorization;
 using MathEvent.IdentityServer.Contracts.Services;
 using MathEvent.IdentityServer.Contracts.Validation.User;
 using MathEvent.IdentityServer.Models.User;
+using MathEvent.IdentityServer.Models.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MathEvent.IdentityServer.Controllers
@@ -78,7 +80,14 @@ namespace MathEvent.IdentityServer.Controllers
         {
             if (Guid.Empty == id)
             {
-                return BadRequest($"id не задан");
+                return BadRequest(new List<ValidationError>()
+                {
+                    new ValidationError()
+                    {
+                        Field = "id",
+                        Message = $"id не задан"
+                    }
+                });
             }
 
             var user = await _mathEventIdentityUserService.Retrieve(id);
@@ -104,7 +113,14 @@ namespace MathEvent.IdentityServer.Controllers
         {
             if (Guid.Empty == id)
             {
-                return BadRequest("id не задан");
+                return BadRequest(new List<ValidationError>()
+                {
+                    new ValidationError()
+                    {
+                        Field = "id",
+                        Message = $"id не задан"
+                    }
+                });
             }
 
             var validationResult = await _mathEventIdentityUserUpdateModelValidator.Validate(userUpdateModel);
@@ -144,12 +160,26 @@ namespace MathEvent.IdentityServer.Controllers
         {
             if (Guid.Empty == id)
             {
-                return BadRequest("id не задан");
+                return BadRequest(new List<ValidationError>()
+                {
+                    new ValidationError()
+                    {
+                        Field = "id",
+                        Message = $"id не задан"
+                    }
+                });
             }
 
             if (patchDocument is null)
             {
-                return BadRequest("Тело запроса не задано");
+                return BadRequest(new List<ValidationError>()
+                {
+                    new ValidationError()
+                    {
+                        Field = "body",
+                        Message = "Тело запроса не задано"
+                    }
+                });
             }
 
             var user = await _mathEventIdentityUserService.Retrieve(id);
@@ -192,7 +222,14 @@ namespace MathEvent.IdentityServer.Controllers
         {
             if (Guid.Empty == id)
             {
-                return BadRequest("id не задан");
+                return BadRequest(new List<ValidationError>()
+                {
+                    new ValidationError()
+                    {
+                        Field = "id",
+                        Message = $"id не задан"
+                    }
+                });
             }
 
             var user = await _mathEventIdentityUserService.Retrieve(id);
